@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ponto Trabalho</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
+    input, button {
+      padding: 12px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background: #00c853;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .box { margin-top: 20px; font-size: 18px; }
+    .highlight { font-size: 22px; margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>Controle de Ponto</h2>
+
+<input type="time" id="entrada">
+<br>
+<button onclick="calcular()">Calcular</button>
+
+<div class="box" id="resultado"></div>
+<div class="highlight" id="contador"></div>
+
+<script>
+let intervalo;
+
+function calcular() {
+  const entrada = document.getElementById("entrada").value;
+  if (!entrada) return;
+
+  const [h, m] = entrada.split(":").map(Number);
+  const base = new Date();
+  base.setHours(h, m, 0, 0);
+
+  const saidaNormal = new Date(base.getTime() + 440 * 60000);
+  const limiteExtra = new Date(base.getTime() + 555 * 60000);
+  const avisoMaximo = new Date(base.getTime() + 560 * 60000 - 5 * 60000);
+
+  document.getElementById("resultado").innerHTML = `
+    Saída normal: ${formatar(saidaNormal)}<br>
+    Limite 1h55 extra: ${formatar(limiteExtra)}<br>
+    Aviso máximo: ${formatar(avisoMaximo)}
+  `;
+
+  clearInterval(intervalo);
+  intervalo = setInterval(() => atualizarContador(saidaNormal), 1000);
+}
+
+function formatar(data) {
+  return data.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function atualizarContador(alvo) {
+  const agora = new Date();
+  const diff = alvo - agora;
+
+  if (diff <= 0) {
+    document.getElementById("contador").innerText = "Expediente encerrado";
+    return;
+  }
+
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  document.getElementById("contador").innerText =
+    `Faltam ${h}h ${m}m ${s}s para saída`;
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
