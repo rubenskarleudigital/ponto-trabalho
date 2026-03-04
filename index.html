@@ -3,8 +3,10 @@ let intervalo;
 let timeoutNotificacao;
 
 async function pedirPermissao() {
-  if (Notification.permission !== "granted") {
-    await Notification.requestPermission();
+  if ("Notification" in window) {
+    if (Notification.permission !== "granted") {
+      await Notification.requestPermission();
+    }
   }
 }
 
@@ -28,11 +30,12 @@ function calcular() {
 }
 
 function formatar(data) {
-  return data.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  return data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function iniciarContador(alvo) {
   clearInterval(intervalo);
+
   intervalo = setInterval(() => {
     const agora = new Date();
     const diff = alvo - agora;
@@ -61,14 +64,15 @@ function agendarNotificacao(alvo) {
   clearTimeout(timeoutNotificacao);
 
   timeoutNotificacao = setTimeout(() => {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification("Hora de bater o ponto", {
-        body: "Sua jornada de 7h20 terminou.",
-        icon: "",
-        vibrate: [200, 100, 200],
-        requireInteraction: true
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification("Hora de bater o ponto", {
+          body: "Sua jornada de 7h20 terminou.",
+          vibrate: [200, 100, 200],
+          requireInteraction: true
+        });
       });
-    });
+    }
 
     tocarSom();
   }, delay);
